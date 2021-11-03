@@ -1,3 +1,4 @@
+import json_io
 import math
 
 
@@ -26,16 +27,23 @@ class FilterDescriptor:
     # have linear phase through the defined regions
 
     @staticmethod
-    def get_json_codec():
-        encoders = [
-            (FilterDescriptor, lambda o: default_json_encoding("filter_descriptor", o)),
-            (FilterDescriptor.HorizontalSegment, lambda o: default_json_encoding("horizontal_segment", o)),
-            (FilterDescriptor.LinearSegment, lambda o: default_json_encoding("linear_segment", o))
+    def get_json_codecs():
+        codecs = [
+            json_io.DefaultClassCodec('filter_descriptor', FilterDescriptor),
+            FilterDescriptor.HorizontalSegment.get_json_codecs(),
+            FilterDescriptor.LinearSegment.get_json_codecs()
         ]
-        decoders = [
-            ("filter_descriptor", FilterDescriptor.json_factory)
-        ]
-        return encoders, decoders
+
+        # encoders = [
+        #     (FilterDescriptor, lambda o: default_json_encoding("filter_descriptor", o)),
+        #     (FilterDescriptor.HorizontalSegment, lambda o: default_json_encoding("horizontal_segment", o)),
+        #     (FilterDescriptor.LinearSegment, lambda o: default_json_encoding("linear_segment", o))
+        # ]
+        # decoders = [
+        #     ("filter_descriptor", FilterDescriptor.json_factory)
+        # ]
+
+        return codecs
 
     @staticmethod
     def json_factory(json):
@@ -43,10 +51,8 @@ class FilterDescriptor:
 
     class HorizontalSegment:
         @staticmethod
-        def get_json_codec():
-            encoder = None
-            decoder = None
-            return encoder, decoder
+        def get_json_codecs():
+            return json_io.DefaultClassCodec('horizontal_segment', FilterDescriptor.HorizontalSegment)
 
         @staticmethod
         def json_factory(json):
@@ -59,8 +65,8 @@ class FilterDescriptor:
             self.weight = weight
 
         def render_to(self, num_points, response, weights):
-            start = math.floor(num_points * (0.5 (self.start_w + math.pi) / math.pi + 0.5))
-            stop = math.floor(num_points * (0.5 (self.stop_w + math.pi) / math.pi + 0.5)) + 1
+            start = math.floor(num_points * (0.5 * (self.start_w + math.pi) / math.pi + 0.5))
+            stop = math.floor(num_points * (0.5 * (self.stop_w + math.pi) / math.pi + 0.5)) + 1
             for i in range(start, stop):
                 if i >= num_points:
                     i -= num_points
@@ -71,10 +77,8 @@ class FilterDescriptor:
 
     class LinearSegment:
         @staticmethod
-        def get_json_codec():
-            encoder = None
-            decoder = None
-            return encoder, decoder
+        def get_json_codecs():
+            return json_io.DefaultClassCodec('linear_segment', FilterDescriptor.LinearSegment)
 
         @staticmethod
         def json_factory(json):
