@@ -57,13 +57,13 @@ class FilterDescriptorDecoder(json.JSONDecoder):
 
 
 if __name__ == '__main__':
-    codecs = []
-    codecs.append(FilterDescriptor.FilterDescriptor.get_json_codecs())
-    print(codecs)
-    jio = JsonCodec(codecs)
+    jio = JsonCodec(FilterDescriptor.FilterDescriptor.get_json_codecs())
 
     #cl = parse_command_line()
     fd = get_sample_filter_descriptor()
+
+    fd_data = jio.dumps(fd, indent=2)
+    print(fd_data)
 
     #fd_data = json.dumps(fd, indent=2, cls=JsonCodec.JsonEncoder)
     #print(fd_data)

@@ -17,33 +17,18 @@ class JsonCodec:
         return {label : o.__dict__}
 
     class JsonEncoder(json.JSONEncoder):
-        def __init__(self, *args, **kwargs):
+        def __init__(self, codecs, *args, **kwargs):
             json.JSONEncoder.__init__(self, *args, **kwargs)
-            self.object_to_json = {}
-
-            #encoders, decoders = FilterDescriptor.FilterDescriptor.get_json_codecs()
-            self.__add_encoder(encoders)
-
-        def __add_encoder(self, encoder):
-            """
-            This method recusrively goes through the possible
-            list of list of lists of encoders
-            :param encoder:
-            :return:
-            """
-            if isinstance(encoder, list):
-                for e in encoder:
-                    self.__add_encoder(e)
-            else:
-                label, entry = encoder
-                self.object_to_json[label] = entry
+            self.__class_to_codec = codecs
 
         def default(self, o):
-            encoder = self.object_to_json.get(type(o), None)
-            if encoder is not None:
-                return encoder(o)
+            codec = self.__class_to_codec[type(o)]
+
+            if codec is not None:
+                assert isinstance(o, codec.class_info)
+                return {codec.label : o.__dict__}
             else:
-                return {'"{}"'.format(type(o)) : o.__dict__}
+                return {'"{}"'.format(type(o)): o.__dict__}
 
     def __init__(self, codecs):
         self.json_to_object = {}
@@ -73,19 +58,30 @@ class JsonCodec:
             label, entry = decoder
             self.json_to_object[label] = entry
 
-    def __object_hook(self, o):
-        #if len(o) == 1 and
-        if 'horizontal_segment' in o:
-            params = o['horizontal_segment']
-            return FilterDescriptor.FilterDescriptor.HorizontalSegment(
-                start_w=params['start_w'],
-                stop_w=params['stop_w'],
-                mag=params['mag'],
-                weight=params['weight']
-            )
-        print(o)
-        return o
+    def __encode_object_hook(self, o):
+        codec = self.class_to_codec[type(o)]
 
+        if codec is not None:
+            assert isinstance(o, codec.class_info)
+            return {codec.label, o.__dict__}
+        else:
+            return {'"{}"'.format(type(o)): o.__dict__}
+        # #if len(o) == 1 and
+        # if 'horizontal_segment' in o:
+        #     params = o['horizontal_segment']
+        #     return FilterDescriptor.FilterDescriptor.HorizontalSegment(
+        #         start_w=params['start_w'],
+        #         stop_w=params['stop_w'],
+        #         mag=params['mag'],
+        #         weight=params['weight']
+        #     )
+        # print(o)
+        # return o
+
+    def __make_encoder(self, *args, **kwargs):
+        je = JsonCodec.JsonEncoder(self.class_to_codec, *args, **kwargs)
+
+        return je
 
     def add_encoder(self, encoder):
         pass
@@ -98,3 +94,6 @@ class JsonCodec:
 
     def get_decoder_cls(self):
         pass
+
+    def dumps(self, obj, **kwargs):
+        return json.dumps(obj, cls=self.__make_encoder)
