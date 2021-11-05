@@ -27,18 +27,6 @@ def get_sample_filter_descriptor():
     return fd
 
 
-class FilterDescriptorEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, FilterDescriptor.FilterDescriptor):
-            return {"filter_descriptor" : o.__dict__}
-        if isinstance(o, FilterDescriptor.FilterDescriptor.LinearSegment):
-            return {"linear_segment" : o.__dict__}
-        if isinstance(o, FilterDescriptor.FilterDescriptor.HorizontalSegment):
-            return {"horizontal_segment": o.__dict__}
-        else:
-            return {'"{}"'.format(type(o)) : o.__dict__}
-
-
 class FilterDescriptorDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
         json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
@@ -65,11 +53,6 @@ if __name__ == '__main__':
     fd_data = jio.dumps(fd, indent=2)
     print(fd_data)
 
-    #fd_data = json.dumps(fd, indent=2, cls=JsonCodec.JsonEncoder)
-    #print(fd_data)
-
-    #fd_data = json.dumps(fd, indent=2, cls=json.JSONDecoder)
-
-    #fd2 = json.loads(fd_data, cls=FilterDescriptorDecoder)
-    #print(fd2)
+    fd2 = jio.loads(fd_data)
+    print(fd2)
 

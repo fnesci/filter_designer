@@ -29,7 +29,7 @@ class FilterDescriptor:
     @staticmethod
     def get_json_codecs():
         codecs = [
-            json_io.DefaultClassCodec('filter_descriptor', FilterDescriptor),
+            json_io.DefaultClassCodec('filter_descriptor', FilterDescriptor, FilterDescriptor.__json_factory),
             FilterDescriptor.HorizontalSegment.get_json_codecs(),
             FilterDescriptor.LinearSegment.get_json_codecs()
         ]
@@ -46,16 +46,17 @@ class FilterDescriptor:
         return codecs
 
     @staticmethod
-    def json_factory(json):
+    def __json_factory(json):
         return FilterDescriptor(**json)
 
     class HorizontalSegment:
         @staticmethod
         def get_json_codecs():
-            return json_io.DefaultClassCodec('horizontal_segment', FilterDescriptor.HorizontalSegment)
+            return json_io.DefaultClassCodec('horizontal_segment', FilterDescriptor.HorizontalSegment,
+                                             FilterDescriptor.HorizontalSegment.__json_factory)
 
         @staticmethod
-        def json_factory(json):
+        def __json_factory(json):
             return FilterDescriptor.HorizontalSegment(**json)
 
         def __init__(self, start_w, stop_w, mag, weight=1.0):
@@ -78,10 +79,11 @@ class FilterDescriptor:
     class LinearSegment:
         @staticmethod
         def get_json_codecs():
-            return json_io.DefaultClassCodec('linear_segment', FilterDescriptor.LinearSegment)
+            return json_io.DefaultClassCodec('linear_segment', FilterDescriptor.LinearSegment,
+                                             FilterDescriptor.LinearSegment.__json_factory)
 
         @staticmethod
-        def json_factory(json):
+        def __json_factory(json):
             return FilterDescriptor.LinearSegment(**json)
 
         def __init__(self, start_w, start_mag, stop_w, stop_mag, weight = 1.0):
@@ -91,9 +93,9 @@ class FilterDescriptor:
             self.stop_mag = stop_mag
             self.weight = weight
 
-    def __init__(self):
-        self.segments = []
-        self.linear_phase = False
+    def __init__(self, segments = [], linear_phase = False):
+        self.segments = segments
+        self.linear_phase = linear_phase
 
     def render(self, num_points):
         """

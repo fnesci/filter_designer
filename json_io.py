@@ -1,9 +1,10 @@
 import json
 
 class DefaultClassCodec:
-    def __init__(self, label, class_info):
+    def __init__(self, label, class_info, factory):
         self.label = label
         self.class_info = class_info
+        self.factory = factory
 
     def encode(self):
         pass
@@ -58,14 +59,17 @@ class JsonCodec:
             label, entry = decoder
             self.json_to_object[label] = entry
 
-    def __encode_object_hook(self, o):
-        codec = self.class_to_codec[type(o)]
+    def __object_pairs_hook(self, o):
+        if len(o) == 1 and o[0][0] in self.label_to_codec:
+            codec = self.label_to_codec[o[0][0]]
+            params = o[0][1]
+            print("Making object of type {} with {}".format(o[0][0], params))
+            kwarg = {kv[0] : kv[1] for kv in params}
+            return codec.factory(kwarg)
 
-        if codec is not None:
-            assert isinstance(o, codec.class_info)
-            return {codec.label, o.__dict__}
-        else:
-            return {'"{}"'.format(type(o)): o.__dict__}
+        # The default is to return what was passed in
+        return o
+
         # #if len(o) == 1 and
         # if 'horizontal_segment' in o:
         #     params = o['horizontal_segment']
@@ -96,4 +100,7 @@ class JsonCodec:
         pass
 
     def dumps(self, obj, **kwargs):
-        return json.dumps(obj, cls=self.__make_encoder)
+        return json.dumps(obj, **kwargs, cls=self.__make_encoder)
+
+    def loads(self, *args, **kwargs):
+        return json.loads(*args, **kwargs, object_pairs_hook=self.__object_pairs_hook)
